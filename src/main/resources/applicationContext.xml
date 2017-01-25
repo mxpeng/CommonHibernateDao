@@ -62,10 +62,10 @@
     <aop:aspectj-autoproxy/>
     
     <!--  注解事务管理器  -->
-    <bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+    <!--<bean id="transactionManager" class="org.springframework.orm.hibernate5.HibernateTransactionManager">
           <property name="sessionFactory" ref="sessionFactory"/>
     </bean>
-    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />	
+    <tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />-->
    
     
 </beans>
