@@ -17,15 +17,12 @@ import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.*;
 
-import static javafx.scene.input.KeyCode.T;
-
-
 @Repository
 @Transactional
 public class BaseDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseDao.class);
-
+    private static final String TOTAL_SQL = "select count(*) from (%s) t";
 
     @Resource
     private SessionFactory sessionFactory;
@@ -55,7 +52,7 @@ public class BaseDao {
             tx.commit();
             return entity;
         } catch (Exception e) {
-            LOGGER.error(String.format("persist [%s] error", T.getName()), e);
+            LOGGER.error(String.format("persist [%s] error", entity.toString()), e);
         } finally {
             if (session != null) {
                 session.close();
@@ -72,7 +69,7 @@ public class BaseDao {
             tx.commit();
             return entity;
         } catch (Exception e) {
-            LOGGER.error(String.format("update [%s] error", T.getName()), e);
+            LOGGER.error(String.format("update [%s] error", entity.toString()), e);
         } finally {
             if (session != null) {
                 session.close();
@@ -89,7 +86,7 @@ public class BaseDao {
             tx.commit();
             return entity;
         } catch (Exception e) {
-            LOGGER.error(String.format("delete [%s] error", T.getName()), e);
+            LOGGER.error(String.format("delete [%s] error", entity.toString()), e);
         } finally {
             if (session != null) {
                 session.close();
@@ -103,7 +100,7 @@ public class BaseDao {
         return executeUpdate(sql, id);
     }
 
-    public <T> List<T> queryAll(Class<T> clazz) {
+    public <T> List<T> all(Class<T> clazz) {
         Session session = this.sessionFactory.openSession();
         try {
             List<T> result = new ArrayList<>();
@@ -120,7 +117,7 @@ public class BaseDao {
         return null;
     }
 
-    public <T> int getTotal(Class<T> clazz) {
+    public <T> int total(Class<T> clazz) {
         Session session = this.sessionFactory.openSession();
         try {
             String sql = "select count(*) from " + getTableName(clazz);
@@ -136,19 +133,6 @@ public class BaseDao {
         return 0;
     }
 
-    /**
-     * 查询clazz类的唯一对象返回
-     *
-     * @return 实体对象
-     */
-    public <T> T uniqueResult(String sql, Class<T> clazz, Object... param) {
-        List<T> result = this.queryList(sql, clazz, param);
-        if (result != null && result.size() > 0) {
-            return result.get(0);
-        } else {
-            return null;
-        }
-    }
 
     public <T> boolean addBentch(List<T> entitys) {
         Session session = this.sessionFactory.openSession();
@@ -164,7 +148,7 @@ public class BaseDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            LOGGER.error(String.format("addBentch [%s] error", T.getName()), e);
+            LOGGER.error(String.format("addBentch [%s] error", entitys.toString()), e);
         } finally {
             if (session != null) {
                 session.close();
@@ -187,7 +171,7 @@ public class BaseDao {
             tx.commit();
             return true;
         } catch (Exception e) {
-            LOGGER.error(String.format("deleteBentch [%s] error", T.getName()), e);
+            LOGGER.error(String.format("deleteBentch [%s] error", entitys.toString()), e);
         } finally {
             if (session != null) {
                 session.close();
@@ -196,47 +180,25 @@ public class BaseDao {
         return false;
     }
 
-    /********************************************************************************
-     * 单表多表列表查询操作
-     */
-    public <T> List<T> queryList(String sql, Class<T> clazz, Object... param) {
-        Session session = this.sessionFactory.openSession();
-        try {
-            List<T> result = new ArrayList<>();
-            SQLQuery q = session.createSQLQuery(sql);
-            result.addAll(bindSQLQueryParams(q, param).addEntity(clazz).list());
-            return result;
-        } catch (Exception e) {
-            LOGGER.error(String.format("query [%s] error", sql), e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return null;
-    }
-
-    public List<Map<String, Object>> queryListMap(String sql, Object... param) {
-        Session session = this.sessionFactory.openSession();
-        try {
-            List<Map<String, Object>> result = new ArrayList<>();
-            result.addAll(bindSQLQueryParams(session.createSQLQuery(sql), param).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
-            return result;
-        } catch (Exception e) {
-            LOGGER.error(String.format("query [%s] error", sql), e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return null;
-    }
-
-
     /******************************************************************************************************
-     * 单表多表其他操作
+     *
      */
-    public Object uniqueResult(String sql, Object... param) {
+
+    /**
+     * 查询clazz类的唯一对象返回
+     *
+     * @return 实体对象
+     */
+    public <T> T uniqueResultEntity(String sql, Class<T> clazz, Object... param) {
+        List<T> result = this.queryListEntity(sql, clazz, param);
+        if (result != null && result.size() > 0) {
+            return result.get(0);
+        } else {
+            return null;
+        }
+    }
+
+    public Object uniqueResultObject(String sql, Object... param) {
         Session session = this.sessionFactory.openSession();
         try {
             Object result = bindSQLQueryParams(session.createSQLQuery(sql), param).uniqueResult();
@@ -269,74 +231,11 @@ public class BaseDao {
         return false;
     }
 
-    /**
-     * 查询某一项的列表，比如全部id的列表
-     */
-    public List<Object> queryListObject(String sql, Object... param) {
+    public int getQuerySize(String sql, Object... param) {
         Session session = this.sessionFactory.openSession();
         try {
-            List<Object> result = new ArrayList<>();
-            result.addAll(bindSQLQueryParams(session.createSQLQuery(sql), param).list());
-            return result;
-        } catch (Exception e) {
-            LOGGER.error(String.format("query [%s] error", sql), e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return null;
-    }
-
-
-    /******************************************************************************************************
-     * 不使用paging类-分页
-     */
-    public <T> List<T> queryListEntityByPage(String sql, Class<T> clazz, int start, int limit, Object... param) {
-        Session session = this.sessionFactory.openSession();
-        try {
-            List<T> result = new ArrayList<>();
-
-            String limit_sql = String.format(" limit %d , %d", start, limit);
-            SQLQuery query = bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param);
-
-            result.addAll(query.addEntity(clazz).list());
-            return result;
-        } catch (Exception e) {
-            LOGGER.error(String.format("query [%s] error", sql), e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return null;
-    }
-
-    public List<Map<String, Object>> queryListMapByPage(String sql, int start, int limit, Object... param) {
-        Session session = this.sessionFactory.openSession();
-        try {
-            List<Map<String, Object>> result = new ArrayList<>();
-            String limit_sql = String.format(" limit %d , %d", start, limit);
-
-            result.addAll(bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
-            return result;
-        } catch (Exception e) {
-            LOGGER.error(String.format("query [%s] error", sql), e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return null;
-    }
-
-    public int getQueryTotal(String sql, Object... param) {
-        Session session = this.sessionFactory.openSession();
-        try {
-
-            SQLQuery q = bindSQLQueryParams(session.createSQLQuery(sql), param);
-
-            return Integer.parseInt(q.uniqueResult().toString());
+            return bindSQLQueryParams(session.createSQLQuery(sql), param).list().size();
+            // return Integer.parseInt(bindSQLQueryParams(session.createSQLQuery(String.format(TOTAL_SQL, sql)), param).uniqueResult().toString());
         } catch (Exception e) {
             LOGGER.error(String.format("query [%s] error", sql), e);
         } finally {
@@ -347,46 +246,135 @@ public class BaseDao {
         return 0;
     }
 
+    /********************************************************************************
+     * 单表,多表 查询操作
+     */
+
+    public <T> List<T> queryListEntity(String sql, Class<T> clazz, Object... param) {
+        return this.queryList(sql, clazz, "map", param);
+    }
+
+    public List<Map<String, Object>> queryListMap(String sql, Object... param) {
+        return this.queryList(sql, null, "map", param);
+    }
+
+    /**
+     * 查询某一项的列表，比如全部id的列表
+     */
+    public List<Object> queryListObject(String sql, Object... param) {
+        return this.queryList(sql, null, "object", param);
+    }
+
+    private <T> List<T> queryList(String sql, Class<T> clazz, String type, Object... param) {
+        Session session = this.sessionFactory.openSession();
+        try {
+            List<T> result = new ArrayList<>();
+            SQLQuery sqlQuery = bindSQLQueryParams(session.createSQLQuery(sql), param);
+            switch (type) {
+                case "entity":
+                    result.addAll(sqlQuery.addEntity(clazz).list());
+                    break;
+                case "map":
+                    result.addAll(sqlQuery.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
+                    break;
+                case "object":
+                    result.addAll(sqlQuery.list());
+                    break;
+            }
+            return result;
+        } catch (Exception e) {
+            LOGGER.error(String.format("query [%s] error", sql), e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+        return null;
+    }
+
+    /******************************************************************************************************
+     * 不使用paging类-分页
+     */
+
+    public <T> List<T> queryListEntityByPage(String sql, Class<T> clazz, int start, int limit, Object... param) {
+        return this.queryListByPage(sql, clazz, start, limit, "entity", param);
+    }
+
+    public List<Map<String, Object>> queryListMapByPage(String sql, int start, int limit, Object... param) {
+        return this.queryListByPage(sql, null, start, limit, "map", param);
+    }
+
+    public List<Object> queryListObjectByPage(String sql, int start, int limit, Object... param) {
+        return this.queryListByPage(sql, null, start, limit, "object", param);
+    }
+
+    private <T> List<T> queryListByPage(String sql, Class<T> clazz, int start, int limit, String type, Object... param) {
+        Session session = this.sessionFactory.openSession();
+        try {
+            List<T> result = new ArrayList<>();
+            String limit_sql = String.format(" limit %d , %d", start, limit);
+
+            SQLQuery query = bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param);
+
+            switch (type) {
+                case "entity":
+                    result.addAll(query.addEntity(clazz).list());
+                    break;
+                case "map":
+                    result.addAll(query.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
+                    break;
+                case "object":
+                    result.addAll(query.list());
+                    break;
+            }
+            return result;
+        } catch (Exception e) {
+            LOGGER.error(String.format("query [%s] error", sql), e);
+        } finally {
+            if (session != null) {
+                session.close();
+            }
+        }
+        return null;
+    }
+
     /******************************************************************************************************
      * 使用paging类-分页
      */
+
     public <T> Paging<T> queryListEntityByPage(String sql, Class<T> clazz, Paging paging, Object... param) {
-        Session session = this.sessionFactory.openSession();
-
-        try {
-            int total = bindSQLQueryParams(session.createSQLQuery(sql), param).addEntity(clazz).list().size();
-
-            List<T> result = new ArrayList<>();
-
-            String limit_sql = String.format(" limit %d , %d", paging.getStart(), paging.getLimit());
-
-            result.addAll(bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param).addEntity(clazz).list());
-
-            paging.setTotal(total);
-            paging.setRows(result);
-
-            return paging;
-        } catch (Exception e) {
-            LOGGER.error(String.format("query [%s] error", sql), e);
-        } finally {
-            if (session != null) {
-                session.close();
-            }
-        }
-        return null;
-
+        return this.queryListByPage(sql, clazz, paging, "entity", param);
     }
 
-    public <T> Paging<T> queryListMapByPage(String sql, Paging paging, Object... param) {
+    public Paging<Map<String, Object>> queryListMapByPage(String sql, Paging paging, Object... param) {
+        return this.queryListByPage(sql, null, paging, "map", param);
+    }
+
+    public Paging<Object> queryListObjectByPage(String sql, Paging paging, Object... param) {
+        return this.queryListByPage(sql, null, paging, "object", param);
+    }
+
+    private <T> Paging<T> queryListByPage(String sql, Class<T> clazz, Paging paging, String type, Object... param) {
         Session session = this.sessionFactory.openSession();
+
         try {
-            int total = bindSQLQueryParams(session.createSQLQuery(sql), param).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list().size();
-            System.err.println(bindSQLQueryParams(session.createSQLQuery(sql), param).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
-            List<Map<String, Object>> result = new ArrayList<>();
+            int total = getQuerySize(sql, param);
+
+            List result = new ArrayList<>();
 
             String limit_sql = String.format(" limit %d , %d", paging.getStart(), paging.getLimit());
 
-            result.addAll(bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
+            switch (type) {
+                case "entity":
+                    result.addAll(bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param).addEntity(clazz).list());
+                    break;
+                case "map":
+                    result.addAll(bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param).setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).list());
+                    break;
+                case "object":
+                    result.addAll(bindSQLQueryParams(session.createSQLQuery(sql + limit_sql), param).list());
+                    break;
+            }
 
             paging.setTotal(total);
             paging.setRows(result);
@@ -401,7 +389,6 @@ public class BaseDao {
         }
         return null;
     }
-
 
     /******************************************************************************************************
      * 其他
@@ -468,4 +455,11 @@ public class BaseDao {
     }
 
 
+    public SessionFactory getSessionFactory() {
+        return sessionFactory;
+    }
+
+    public Session openSession(){
+        return this.sessionFactory.openSession();
+    }
 }
