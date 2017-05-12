@@ -17,6 +17,10 @@ import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.*;
 
+
+/**
+ * Created by Peng on 2016/12/22.
+ */
 @Repository
 @Transactional
 public class BaseDao {

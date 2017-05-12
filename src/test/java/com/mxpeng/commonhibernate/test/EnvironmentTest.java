@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
- * Created by tian_ on 2016/11/16.
+ * Created by Peng on 2016/11/16.
  */
 public class EnvironmentTest {
 

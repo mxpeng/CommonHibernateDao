@@ -6,7 +6,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
- * Created by tian_ on 2016/12/22.
+ * Created by Peng on 2016/12/22.
  */
 @Entity
 @Table(name = "t_user")

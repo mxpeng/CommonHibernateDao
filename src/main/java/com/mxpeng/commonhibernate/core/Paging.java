@@ -2,7 +2,9 @@ package com.mxpeng.commonhibernate.core;
 
 import java.io.Serializable;
 import java.util.List;
-
+/**
+ * Created by Peng on 2016/12/22.
+ */
 public class Paging<T> implements Serializable {
 
 	private int total;

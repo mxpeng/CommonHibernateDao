@@ -12,7 +12,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import java.util.*;
 
 /**
- * Created by tian_ on 2016/12/22.
+ * Created by Peng on 2016/12/22.
  */
 public class BaseDaoTest {
 
