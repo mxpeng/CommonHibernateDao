@@ -39,6 +39,7 @@ public class BaseDao {
         try {
             return session.get(clazz, Objects.requireNonNull(id));
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("get [%s] error", clazz.getName()), e);
         } finally {
             if (session != null) {
@@ -56,6 +57,7 @@ public class BaseDao {
             tx.commit();
             return entity;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("persist [%s] error", entity.toString()), e);
         } finally {
             if (session != null) {
@@ -73,6 +75,7 @@ public class BaseDao {
             tx.commit();
             return entity;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("update [%s] error", entity.toString()), e);
         } finally {
             if (session != null) {
@@ -90,6 +93,7 @@ public class BaseDao {
             tx.commit();
             return entity;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("delete [%s] error", entity.toString()), e);
         } finally {
             if (session != null) {
@@ -112,6 +116,7 @@ public class BaseDao {
             result.addAll(session.createSQLQuery(sql).addEntity(clazz).list());
             return result;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("queryAll [%s] error", clazz.getName()), e);
         } finally {
             if (session != null) {
@@ -128,6 +133,7 @@ public class BaseDao {
             SQLQuery query = session.createSQLQuery(sql);
             return Integer.parseInt(query.uniqueResult().toString());
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("getTotal [%s] error", clazz.getName()), e);
         } finally {
             if (session != null) {
@@ -152,6 +158,7 @@ public class BaseDao {
             tx.commit();
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("addBentch [%s] error", entitys.toString()), e);
         } finally {
             if (session != null) {
@@ -175,6 +182,7 @@ public class BaseDao {
             tx.commit();
             return true;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("deleteBentch [%s] error", entitys.toString()), e);
         } finally {
             if (session != null) {
@@ -208,6 +216,7 @@ public class BaseDao {
             Object result = bindSQLQueryParams(session.createSQLQuery(sql), param).uniqueResult();
             return result;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("query [%s] error", sql), e);
         } finally {
             if (session != null) {
@@ -226,6 +235,7 @@ public class BaseDao {
             tx.commit();
             return flag;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("uniqueResult [%s] error", sql), e);
         } finally {
             if (session != null) {
@@ -241,6 +251,7 @@ public class BaseDao {
             return bindSQLQueryParams(session.createSQLQuery(sql), param).list().size();
             // return Integer.parseInt(bindSQLQueryParams(session.createSQLQuery(String.format(TOTAL_SQL, sql)), param).uniqueResult().toString());
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("query [%s] error", sql), e);
         } finally {
             if (session != null) {
@@ -255,7 +266,7 @@ public class BaseDao {
      */
 
     public <T> List<T> queryListEntity(String sql, Class<T> clazz, Object... param) {
-        return this.queryList(sql, clazz, "map", param);
+        return this.queryList(sql, clazz, "entity", param);
     }
 
     public List<Map<String, Object>> queryListMap(String sql, Object... param) {
@@ -265,7 +276,7 @@ public class BaseDao {
     /**
      * 查询某一项的列表，比如全部id的列表
      */
-    public List<Object> queryListObject(String sql, Object... param) {
+    public <T> List<T> queryListObject(String sql, Object... param) {
         return this.queryList(sql, null, "object", param);
     }
 
@@ -287,6 +298,7 @@ public class BaseDao {
             }
             return result;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("query [%s] error", sql), e);
         } finally {
             if (session != null) {
@@ -308,7 +320,7 @@ public class BaseDao {
         return this.queryListByPage(sql, null, start, limit, "map", param);
     }
 
-    public List<Object> queryListObjectByPage(String sql, int start, int limit, Object... param) {
+    public <T> List<T> queryListObjectByPage(String sql, int start, int limit, Object... param) {
         return this.queryListByPage(sql, null, start, limit, "object", param);
     }
 
@@ -333,6 +345,7 @@ public class BaseDao {
             }
             return result;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("query [%s] error", sql), e);
         } finally {
             if (session != null) {
@@ -354,7 +367,7 @@ public class BaseDao {
         return this.queryListByPage(sql, null, paging, "map", param);
     }
 
-    public Paging<Object> queryListObjectByPage(String sql, Paging paging, Object... param) {
+    public <T> Paging<T> queryListObjectByPage(String sql, Paging paging, Object... param) {
         return this.queryListByPage(sql, null, paging, "object", param);
     }
 
@@ -385,6 +398,7 @@ public class BaseDao {
 
             return paging;
         } catch (Exception e) {
+            e.printStackTrace();
             LOGGER.error(String.format("query [%s] error", sql), e);
         } finally {
             if (session != null) {
@@ -463,7 +477,8 @@ public class BaseDao {
         return sessionFactory;
     }
 
-    public Session openSession(){
+    public Session openSession() {
         return this.sessionFactory.openSession();
     }
 }
+
